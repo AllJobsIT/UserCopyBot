@@ -79,6 +79,11 @@ async def my_event_handler(event):
             pass
 
 
+@client.on(events.NewMessage(pattern="!ping"))
+async def test(event):
+    await event.reply("PONG")
+
+
 async def main():
     log.info("Получаю список каналов.")
     async for dialog in client.iter_dialogs():
