@@ -59,7 +59,7 @@ def get_prompt(text):
     return prompt
 
 
-@app.on_message(filters.text & filters.channel)
+@app.on_message(filters.text)
 async def my_event_handler(_, message):
     msg = message.text
     ai_client = AIClient()
