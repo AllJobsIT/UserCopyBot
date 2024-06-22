@@ -1,11 +1,13 @@
+import asyncio
 import json
 import logging
 import os
 import re
 
+from aiohttp import ClientSession
 from dotenv import load_dotenv
-from g4f.client import Client
-from telethon import TelegramClient, events
+from openai import Client as AIClient
+from pyrogram import Client, filters, idle
 
 from api.post_vacancy import send_vacancy
 
@@ -15,12 +17,14 @@ logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 logging.getLogger('pika').setLevel(logging.WARNING)
 log = logging.getLogger()
 
-client = TelegramClient(session=os.getenv("SESSION_NAME"), api_id=int(os.getenv('API_ID')),
-                        api_hash=os.getenv('API_HASH'))
 all_chats = []
 
 phone = os.getenv("PHONE")
 password = os.getenv("PASS")
+
+app = Client(name=os.getenv("SESSION_NAME"), api_id=int(os.getenv('API_ID')),
+             api_hash=os.getenv('API_HASH'), phone_number=phone, password=password)
+session = ClientSession()
 
 
 async def is_valid_json(text):
@@ -55,11 +59,11 @@ def get_prompt(text):
     return prompt
 
 
-@client.on(events.NewMessage(chats=all_chats))
-async def my_event_handler(event):
-    msg = event.text
-    ai_client = Client()
-    log.info(f"Получено сообщение с канала {event.chat_id}. Начинаю обработку!")
+@app.on_message(filters.text & filters.channel)
+async def my_event_handler(_, message):
+    msg = message.text
+    ai_client = AIClient()
+    log.info(f"Получено сообщение с канала {message.chat.id}. Начинаю обработку!")
     response = ai_client.chat.completions.create(
         model="gpt-4",
         messages=[
@@ -73,28 +77,23 @@ async def my_event_handler(event):
     result = response.choices[0].message.content
     result_dict = await json_to_dict(json_message=result)
     if result_dict['vacancy']:
-        log.info(f"Сообщение с канала {event.chat_id} отправляю в CMS!")
-        response = await send_vacancy(msg, str(event.chat_id))
+        log.info(f"Сообщение с канала {message.chat.id} отправляю в CMS!")
+        response = await send_vacancy(msg, str(message.chat.id))
         if response:
             pass
 
 
-@client.on(events.NewMessage(pattern="!ping"))
-async def test(event):
-    await event.reply("PONG")
+@app.on_message(filters.command("ping") & filters.chat("me"))
+async def test(_, message):
+    await message.reply("PONG")
 
 
-async def main():
-    log.info("Получаю список каналов.")
-    async for dialog in client.iter_dialogs():
-        if dialog.is_channel:
-            all_chats.append(dialog.id)
+async def start():
+    await app.start()
+    print("Bot started!")
+    await idle()
+    await session.close()
 
 
-if __name__ == "__main__":
-    log.info("Запуск...")
-    with client.start(phone=lambda: phone, password=lambda: password):
-        client.session.save()
-        client.loop.run_until_complete(main())
-        log.info("Получен список каналов. Начинаю слушать")
-        client.run_until_disconnected()
+loop = asyncio.get_event_loop()
+loop.run_until_complete(start())
