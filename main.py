@@ -17,8 +17,6 @@ logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 logging.getLogger('pika').setLevel(logging.WARNING)
 log = logging.getLogger()
 
-all_chats = []
-
 phone = os.getenv("PHONE")
 password = os.getenv("PASS")
 
@@ -61,6 +59,8 @@ def get_prompt(text):
 
 @app.on_message(filters.text)
 async def my_event_handler(_, message):
+    if message.chat.id == -1001363249020:
+        return
     msg = message.text
     ai_client = AIClient()
     log.info(f"Получено сообщение с канала {message.chat.id}. Начинаю обработку!")
