@@ -59,7 +59,7 @@ def get_prompt(text):
 
 @app.on_message(filters.text)
 async def my_event_handler(_, message):
-    if message.chat.id == -1001363249020:
+    if message.chat.id == -1002062977760:
         return
     msg = message.text
     ai_client = AIClient()
