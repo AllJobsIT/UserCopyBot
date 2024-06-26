@@ -65,7 +65,7 @@ async def my_event_handler(_, message):
     ai_client = AIClient()
     log.info(f"Получено сообщение с канала {message.chat.id}. Начинаю обработку!")
     response = ai_client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4o",
         messages=[
             {"role": "system",
              "content": "Ты продвинутый анализатор текста"
