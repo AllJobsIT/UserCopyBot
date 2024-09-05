@@ -8,6 +8,7 @@ from aiohttp import ClientSession
 from dotenv import load_dotenv
 from openai import Client as AIClient
 from pyrogram import Client, filters, idle
+from pyrogram.types import Message
 
 from api.post_vacancy import send_vacancy
 
@@ -78,7 +79,7 @@ async def my_event_handler(_, message):
     result_dict = await json_to_dict(json_message=result)
     if result_dict['vacancy']:
         log.info(f"Сообщение с канала {message.chat.id} отправляю в CMS!")
-        response = await send_vacancy(msg, str(message.chat.id))
+        response = await send_vacancy(msg, str(message.chat.title))
         if response:
             pass
 
