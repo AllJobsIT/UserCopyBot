@@ -15,7 +15,7 @@ class GraphQLClient:
         return variables, variables_types
 
     async def post_query(self, name_nutation: str, name_query: str, fields: list, variables: dict = None):
-        mutation_variables_types, mutation_variables = self._definition_variables(variables)
+        mutation_variables, mutation_variables_types = self._definition_variables(variables)
         query = \
             f"""
             mutation {name_nutation} ({mutation_variables_types}) {{
