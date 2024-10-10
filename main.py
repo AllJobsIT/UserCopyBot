@@ -4,13 +4,14 @@ import logging
 import os
 import re
 
+import pytz
 from aiohttp import ClientSession
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dotenv import load_dotenv
 from openai import Client as AIClient
 from pyrogram import Client, filters, idle
-from pyrogram.types import Message
 
-from api.post_vacancy import send_vacancy
+from api.post_vacancy import send_vacancy, get_chats
 
 load_dotenv()
 
@@ -24,6 +25,7 @@ password = os.getenv("PASS")
 app = Client(name=os.getenv("SESSION_NAME"), api_id=int(os.getenv('API_ID')),
              api_hash=os.getenv('API_HASH'), phone_number=phone, password=password)
 session = ClientSession()
+scheduler = AsyncIOScheduler()
 
 
 async def is_valid_json(text):
@@ -89,9 +91,28 @@ async def test(_, message):
     await message.reply("PONG")
 
 
+async def broadcast_message(chat_ids, message_text):
+    """Рассылка сообщения по списку чатов"""
+    for chat_id in chat_ids:
+        try:
+            await app.send_message(chat_id, message_text)
+            log.info(f"Сообщение отправлено в чат {chat_id}")
+            await asyncio.sleep(5)
+        except Exception as e:
+            log.error(f"Не удалось отправить сообщение в чат {chat_id}: {e}")
+
+
+async def scheduled_broadcast():
+    chat_ids, message_text = await get_chats()
+    await broadcast_message(chat_ids, message_text)
+
+
 async def start():
     await app.start()
     print("Bot started!")
+    moscow_tz = pytz.timezone('Europe/Moscow')
+    scheduler.add_job(scheduled_broadcast, 'cron', hour=10, minute=0, timezone=moscow_tz)
+    scheduler.start()
     await idle()
     await session.close()
 

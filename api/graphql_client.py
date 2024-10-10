@@ -28,11 +28,11 @@ class GraphQLClient:
 
     async def get_query(self, name_query: str, fields: list):
         query = \
-            f"""
-            {name_query} {{
-                {' '.join(fields)}
-            }}
-            """
+            f"""{{
+                {name_query} {{
+                    {' '.join(fields)}
+                }}
+            }}"""
         return query, name_query
 
     async def execute(self, query, name_query: str = None, variables: dict = None):
