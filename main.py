@@ -111,7 +111,7 @@ async def start():
     await app.start()
     print("Bot started!")
     moscow_tz = pytz.timezone('Europe/Moscow')
-    scheduler.add_job(scheduled_broadcast, 'cron', hour=10, minute=0, timezone=moscow_tz)
+    scheduler.add_job(scheduled_broadcast, 'cron', hour=10, minute=0, day_of_week='mon-fri', timezone=moscow_tz)
     scheduler.start()
     await idle()
     await session.close()
