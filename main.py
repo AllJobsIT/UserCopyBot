@@ -1,4 +1,5 @@
 import asyncio
+import csv
 import json
 import logging
 import os
@@ -107,8 +108,28 @@ async def scheduled_broadcast():
     await broadcast_message(chat_ids, message_text)
 
 
+async def get_all_chats():
+    result = []
+    async for dialog in app.get_dialogs():
+        chat = dialog.chat
+        if chat.type in ["private"]:
+            name = f"{chat.first_name or ''} {chat.last_name or ''}".strip()
+        else:
+            name = chat.title or "Без названия"
+        chat_id = chat.id
+        if chat.type in ["supergroup", "channel"]:
+            chat_id = f"-100{abs(chat.id)}"
+        result.append({"name": name, "id": chat_id})
+    with open("chats.csv", mode="w", encoding="utf-8") as file:
+        writer = csv.DictWriter(file, fieldnames=["name", "id"])
+        writer.writeheader()
+        for row in result:
+            writer.writerow(row)
+
+
 async def start():
     await app.start()
+    await get_all_chats()
     print("Bot started!")
     moscow_tz = pytz.timezone('Europe/Moscow')
     scheduler.add_job(scheduled_broadcast, 'cron', hour=10, minute=0, day_of_week='mon-fri', timezone=moscow_tz)
