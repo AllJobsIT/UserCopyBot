@@ -115,7 +115,7 @@ async def get_all_chats():
         if chat.type in ["private"]:
             name = f"{chat.first_name or ''} {chat.last_name or ''}".strip()
         else:
-            name = chat.title or "Без названия"
+            name = chat.title or f"{chat.first_name} {chat.last_name}"
         chat_id = chat.id
         if chat.type in ["supergroup", "channel"]:
             chat_id = f"-100{abs(chat.id)}"
